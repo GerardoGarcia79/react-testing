@@ -20,3 +20,4 @@ describe('Greet', () => {
         expect(button).toHaveTextContent(/login/i)
     })
 })
+
