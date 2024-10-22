@@ -41,4 +41,12 @@ describe('ProductDetail', () => {
 
         expect(await screen.findByText(/invalid/i)).toBeInTheDocument()
     })
+    
+    it('should render an error message when there is an error', async () => {
+        server.use(http.get('products/1', () => HttpResponse.error()))
+
+        render(<ProductDetail productId={1}/>)
+
+        expect(await screen.findByText(/error/i)).toBeInTheDocument()
+    })
 })
