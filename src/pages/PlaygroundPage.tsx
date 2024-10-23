@@ -1,7 +1,7 @@
-import ProductList from "../components/ProductList";
+import ProductDetail from "../components/ProductDetail";
 
 const PlaygroundPage = () => {
-  return <ProductList />
+  return <ProductDetail productId={1}/>
 };
 
 export default PlaygroundPage;
