@@ -47,4 +47,24 @@ describe('BrowseProductsPage', () => {
 
         await waitForElementToBeRemoved(() => screen.getByRole('progressbar', { name: /products/i }))
     })
+
+    it('should not render an error if categories fetching fails', async () => {
+        server.use(http.get('/categories', () => HttpResponse.error()))
+
+        renderComponent()
+
+        await waitForElementToBeRemoved(() => 
+            screen.queryByRole('progressbar', { name: /categories/i })
+        )
+        expect(screen.queryByText(/error/i)).not.toBeInTheDocument()
+        expect(screen.queryByRole('combobox', { name: /category/i})).not.toBeInTheDocument()
+    })
+
+    it('should show an error message if products fetching fails', async () => {
+        server.use(http.get('/products', () => HttpResponse.error()))
+
+        renderComponent()
+
+        expect(await screen.findByText(/error/i)).toBeInTheDocument()
+    })
 })
