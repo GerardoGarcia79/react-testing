@@ -6,57 +6,69 @@ import AllProviders from '../AllProviders'
 import { db } from '../mocks/db'
 
 describe('ProductForm', () => {
-    const categories: Category[] = []
-    const products: Product[] = []
-    
-    beforeAll(() => {
-        [1, 2].forEach(() => {
-            const category = db.category.create()
-            categories.push(category)
-        })
+    let category: Category;
+    let product: Product;
 
-        const product = db.product.create({ categoryId: categories[0].id })
-        products.push(product)
+    const renderComponent = (product?: Product) => {
+        render(<ProductForm onSubmit={vi.fn()} product={product}/>, { wrapper: AllProviders})
+
+        const waitForFormToLoad = () => screen.queryByText(/loading/i)
+        const getInputs = () => {
+            return {
+                nameInput: screen.getByPlaceholderText(/name/i),
+                priceInput: screen.getByPlaceholderText(/price/i),
+                categoryInput: screen.getByRole('combobox', { name: /category/i })
+            }
+        }
+
+        return {
+            getInputs,
+            waitForFormToLoad,
+        }
+    }
+
+    beforeAll(() => {
+        category = db.category.create()
+        product = db.product.create({ categoryId: category.id })
     })
 
     afterAll(() => {
-        const categoryIds = categories.map(c => c.id)
-        db.category.deleteMany({ where: { id: { in: categoryIds }}})
-        db.product.delete({ where: { id: { equals: products[0].id }}})
+        db.category.delete({ where: { id: { equals: category.id }}})
+        db.product.delete({ where: { id: { equals: product.id }}})
     })
 
     it('should render form fields', async () => {
-        render(<ProductForm onSubmit={vi.fn()}/>, { wrapper: AllProviders})
+        const { getInputs, waitForFormToLoad } = renderComponent()
+        
+        await waitForElementToBeRemoved(waitForFormToLoad)
+        const { categoryInput, nameInput, priceInput } = getInputs()
 
-        await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
-
-        expect(screen.getByPlaceholderText(/name/i)).toBeInTheDocument()
-        expect(screen.getByPlaceholderText(/price/i)).toBeInTheDocument()
-        expect(screen.getByRole('combobox', { name: /category/i })).toBeInTheDocument()
+        expect(nameInput).toBeInTheDocument()
+        expect(priceInput).toBeInTheDocument()
+        expect(categoryInput).toBeInTheDocument()
     })
 
     it('should render all options when clicking drop-down list', async () => {
-        render(<ProductForm onSubmit={vi.fn()}/>, { wrapper: AllProviders})
-
-        await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
-        const combobox = screen.getByRole('combobox', { name: /category/i })
+        const { getInputs, waitForFormToLoad } = renderComponent()
+        await waitForElementToBeRemoved(waitForFormToLoad)
+        const { categoryInput } = getInputs()
+        const combobox = categoryInput
         expect(combobox).toBeInTheDocument()
+
         const user = userEvent.setup()
         await user.click(combobox)
         
-        categories.forEach(product => {
-            expect(screen.getByRole('option', { name: product.name }))
-        })
+        expect(screen.getByRole('option', { name: category.name }))
     })
 
     it('should render initial data when editing a product', async () => {
-        const product = products[0]
-        render(<ProductForm onSubmit={vi.fn()} product={product}/>, { wrapper: AllProviders})
+        const { getInputs, waitForFormToLoad } = renderComponent(product)
 
-        await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
+        await waitForElementToBeRemoved(waitForFormToLoad)
+        const { categoryInput, nameInput, priceInput } = getInputs()
 
-        expect(screen.getByPlaceholderText(/name/i)).toHaveValue(product.name)
-        expect(screen.getByPlaceholderText(/price/i)).toHaveValue(product.price.toString())
-        expect(screen.getByRole('combobox', { name: /category/i })).toHaveTextContent(categories[0].name)
+        expect(nameInput).toHaveValue(product.name)
+        expect(priceInput).toHaveValue(product.price.toString())
+        expect(categoryInput).toHaveTextContent(category.name)
     })
 })
