@@ -12,8 +12,9 @@ describe('ProductForm', () => {
     const renderComponent = (product?: Product) => {
         render(<ProductForm onSubmit={vi.fn()} product={product}/>, { wrapper: AllProviders})
 
-        const waitForFormToLoad = () => screen.queryByText(/loading/i)
-        const getInputs = () => {
+        const waitForFormToLoad = async () => {
+            await waitForElementToBeRemoved(screen.queryByText(/loading/i))
+
             return {
                 nameInput: screen.getByPlaceholderText(/name/i),
                 priceInput: screen.getByPlaceholderText(/price/i),
@@ -22,7 +23,6 @@ describe('ProductForm', () => {
         }
 
         return {
-            getInputs,
             waitForFormToLoad,
         }
     }
@@ -38,10 +38,9 @@ describe('ProductForm', () => {
     })
 
     it('should render form fields', async () => {
-        const { getInputs, waitForFormToLoad } = renderComponent()
+        const { waitForFormToLoad } = renderComponent()
         
-        await waitForElementToBeRemoved(waitForFormToLoad)
-        const { categoryInput, nameInput, priceInput } = getInputs()
+        const { categoryInput, nameInput, priceInput } = await waitForFormToLoad()
 
         expect(nameInput).toBeInTheDocument()
         expect(priceInput).toBeInTheDocument()
@@ -49,9 +48,8 @@ describe('ProductForm', () => {
     })
 
     it('should render all options when clicking drop-down list', async () => {
-        const { getInputs, waitForFormToLoad } = renderComponent()
-        await waitForElementToBeRemoved(waitForFormToLoad)
-        const { categoryInput } = getInputs()
+        const { waitForFormToLoad } = renderComponent()
+        const { categoryInput } = await waitForFormToLoad()
         const combobox = categoryInput
         expect(combobox).toBeInTheDocument()
 
@@ -62,13 +60,20 @@ describe('ProductForm', () => {
     })
 
     it('should render initial data when editing a product', async () => {
-        const { getInputs, waitForFormToLoad } = renderComponent(product)
+        const { waitForFormToLoad } = renderComponent(product)
 
-        await waitForElementToBeRemoved(waitForFormToLoad)
-        const { categoryInput, nameInput, priceInput } = getInputs()
+        const { categoryInput, nameInput, priceInput } = await waitForFormToLoad()
 
         expect(nameInput).toHaveValue(product.name)
         expect(priceInput).toHaveValue(product.price.toString())
         expect(categoryInput).toHaveTextContent(category.name)
+    })
+
+    it('should put focus on the name input', async () => {
+        const { waitForFormToLoad } = renderComponent(product)
+
+        const { nameInput } = await waitForFormToLoad()
+
+        expect(nameInput).toHaveFocus()
     })
 })
