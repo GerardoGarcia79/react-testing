@@ -103,4 +103,48 @@ describe('ProductForm', () => {
         expect(error).toBeInTheDocument()
         expect(error).toHaveTextContent(errorMessage)
     })
+
+    it.each([
+        {
+            scenario: 'missing',
+            errorMessage: /required/i
+        },
+        {
+            scenario: '0',
+            price: '0',
+            errorMessage: /1/i
+        },
+        {
+            scenario: 'negative',
+            price: '-1',
+            errorMessage: /1/i
+        },
+        {
+            scenario: 'greater than 1000',
+            price: '1001',
+            errorMessage: /1000/i
+        },
+        {
+            scenario: 'not a number',
+            price: 'true',
+            errorMessage: /required/i
+        },
+    ])('should render an error message if price is $scenario', async ({ price, errorMessage }) => {
+        const { waitForFormToLoad } = renderComponent()
+
+        const { categoryInput, nameInput, priceInput, submitButton} = await waitForFormToLoad()
+        const user = userEvent.setup()
+        await user.type(nameInput, 'Smartphone')
+        await user.click(priceInput)
+        if(price !== undefined)
+            await user.type(priceInput, price)
+        await user.click(categoryInput)
+        const options = screen.getAllByRole('option')
+        await user.click(options[0])
+        await user.click(submitButton)
+        const error = screen.getByRole('alert')
+
+        expect(error).toBeInTheDocument()
+        expect(error).toHaveTextContent(errorMessage)
+    })
 })
