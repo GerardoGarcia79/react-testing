@@ -12,19 +12,18 @@ describe('ProductForm', () => {
     const renderComponent = (product?: Product) => {
         render(<ProductForm onSubmit={vi.fn()} product={product}/>, { wrapper: AllProviders})
 
-        const waitForFormToLoad = async () => {
+        return { 
+            waitForFormToLoad: async () => {
             await waitForElementToBeRemoved(screen.queryByText(/loading/i))
 
             return {
                 nameInput: screen.getByPlaceholderText(/name/i),
                 priceInput: screen.getByPlaceholderText(/price/i),
-                categoryInput: screen.getByRole('combobox', { name: /category/i })
+                categoryInput: screen.getByRole('combobox', { name: /category/i }),
+                submitButton: screen.getByRole('button', { name: /submit/i })
+                }
             }
-        }
-
-        return {
-            waitForFormToLoad,
-        }
+        } 
     }
 
     beforeAll(() => {
@@ -75,5 +74,21 @@ describe('ProductForm', () => {
         const { nameInput } = await waitForFormToLoad()
 
         expect(nameInput).toHaveFocus()
+    })
+
+    it('should display an error if name is missing', async () => {
+        const { waitForFormToLoad } = renderComponent()
+
+        const form = await waitForFormToLoad()
+        const user = userEvent.setup()
+        await user.type(form.priceInput, '1')
+        await user.click(form.categoryInput)
+        const options = screen.getAllByRole('option')
+        await user.click(options[0])
+        await user.click(form.submitButton)
+
+        const error = screen.getByRole('alert')
+        expect(error).toBeInTheDocument()
+        expect(error).toHaveTextContent(/required/i)
     })
 })
