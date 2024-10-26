@@ -1,5 +1,6 @@
 import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Toaster } from 'react-hot-toast'
 import ProductForm from '../../src/components/ProductForm'
 import { Category, Product } from '../../src/entities'
 import AllProviders from '../AllProviders'
@@ -10,9 +11,17 @@ describe('ProductForm', () => {
     let product: Product;
 
     const renderComponent = (product?: Product) => {
-        render(<ProductForm onSubmit={vi.fn()} product={product}/>, { wrapper: AllProviders})
+        const onSubmit = vi.fn()
+        render(
+        <>
+            <ProductForm onSubmit={onSubmit} product={product}/>
+            <Toaster />
+        </>
+        , { wrapper: AllProviders}
+    )
 
         return {
+            onSubmit,
             expectErrorToBeInTheDocument: (errorMessage: RegExp) => {
                 const error = screen.getByRole('alert')
                 expect(error).toBeInTheDocument()
@@ -35,7 +44,7 @@ describe('ProductForm', () => {
                 id: 1,
                 name: 'a',
                 price: 1,
-                categoryId: 1
+                categoryId: category.id
             }
 
             const fill = async (product: FormData) => {
@@ -60,7 +69,7 @@ describe('ProductForm', () => {
                 categoryInput,
                 submitButton,
                 fill,
-                validData
+                validData,
             }
         } 
     }
@@ -168,5 +177,26 @@ describe('ProductForm', () => {
         await form.fill({ ...form.validData, price })
         
         expectErrorToBeInTheDocument(errorMessage)
+    })
+
+    it('should call onSubmit with the correct data when submitting the form', async () => {
+        const { waitForFormToLoad, onSubmit } = renderComponent()
+        const form = await waitForFormToLoad()
+        await form.fill(form.validData)
+
+        const { id, ...formData } = form.validData
+        expect(onSubmit).toHaveBeenCalledWith(formData)
+    })
+
+    it('should show a toast notification with the incorrect data when submitting the form', async () => {
+        const { waitForFormToLoad, onSubmit } = renderComponent()
+        onSubmit.mockRejectedValue({})
+
+        const form = await waitForFormToLoad()
+        await form.fill(form.validData)
+
+        const toast = await screen.findByRole('status')
+        expect(toast).toBeInTheDocument()
+        expect(toast).toHaveTextContent(/error/i)
     })
 })
