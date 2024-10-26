@@ -4,7 +4,7 @@ import useLanguage from "../hooks/useLanguage";
 const Label = ({ labelId }: { labelId: string }) => {
   const { getLabel } = useLanguage();
 
-  return <Text>{getLabel(labelId)}</Text>;
+  return <Text role="label">{getLabel(labelId)}</Text>;
 };
 
 export default Label;
