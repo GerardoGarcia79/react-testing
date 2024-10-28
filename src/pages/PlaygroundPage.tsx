@@ -1,7 +1,7 @@
-import CategoryList from "../components/CategoryList";
+import AuthStatus from "../components/AuthStatus";
 
 const PlaygroundPage = () => {
-  return <CategoryList />
+  return <AuthStatus />
 };
 
 export default PlaygroundPage;
