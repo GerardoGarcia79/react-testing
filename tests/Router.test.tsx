@@ -25,4 +25,16 @@ describe('Router', () => {
 
         db.product.delete({ where: { id: { equals: product.id }}})
     })
+
+    it('should render the error page for an invalid route', () => {
+        navigateTo('/x')
+
+        expect(screen.getByRole('heading', { name: /oops/i })).toBeInTheDocument()
+    })
+
+    it('should render the admin home page for /admin', () => {
+        navigateTo('/admin')
+
+        expect(screen.getByRole('heading', { name: /admin/i })).toBeInTheDocument()
+    })
 })
