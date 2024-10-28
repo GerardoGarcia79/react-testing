@@ -3,16 +3,15 @@ import delay from 'delay'
 import { http, HttpResponse } from 'msw'
 import CategoryList from '../../src/components/CategoryList'
 import { Category } from '../../src/entities'
-import ReduxProvider from '../../src/providers/ReduxProvider'
+import AllProviders from '../AllProviders'
 import { db } from '../mocks/db'
 import { server } from '../mocks/server'
 
 describe('CategoryList', () => {
     const renderComponent = () => {
         render(
-            <ReduxProvider>
-                <CategoryList />
-            </ReduxProvider>
+            <CategoryList />,
+            { wrapper: AllProviders}
         )
     }
     
